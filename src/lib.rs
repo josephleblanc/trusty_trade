@@ -20,30 +20,30 @@ pub struct BollingerBands {
     // time in Unix Epoch
     pub time: u64,
     // Upper Bollinger Band
-    pub bolu: f64,
+    pub bolu: f32,
     // Lower Bollinger Band
-    pub bold: f64,
+    pub bold: f32,
     // Moving average over n days
-    pub ma: f64,
+    pub ma: f32,
     // number of days in smoothing period
     pub n: u32,
     // number of standard deviations (typically 2)
-    pub m: f64,
+    pub m: f32,
     // Standard Deviation over last n periods of tp
-    pub sd: f64,
+    pub sd: f32,
 }
 
 impl BollingerBands {
     // Makes a vec of Bollinger Bands struct from an array of n elements, where
     // n is the window of the Bollinger Band. This also uses an array of
     // timestamps in Unix Epoch, taken from the last timestamp in the array.
-    pub fn from_tp(data_array: &[f64], time_array: &[u64]) -> BollingerBands {
+    pub fn from_tp(data_array: &[f32], time_array: &[u64]) -> BollingerBands {
         let mut bands: BollingerBands = BollingerBands {
             n: data_array.len().try_into().unwrap(),
             time: *time_array.last().unwrap(),
             ..Default::default()
         };
-        let sample_variation: f64;
+        let sample_variation: f32;
         (bands.ma, _, sample_variation) = mean_and_variance(data_array).unwrap();
         bands.sd = sample_variation.sqrt();
         bands.bolu = bands.ma + bands.m * bands.sd;
@@ -73,7 +73,7 @@ impl Default for BollingerBands {
 // The current implementation calculates the mean and variance for each value,
 // but this might change in the future as I add other trading indicators, which
 // can draw from a pool of already calculated mean and variance values.
-pub fn get_band_vec(tp_array: &[f64], time_array: &[u64]) -> Vec<BollingerBands> {
+pub fn get_band_vec(tp_array: &[f32], time_array: &[u64]) -> Vec<BollingerBands> {
     let n = 20;
     if tp_array.len() < 20 {
         panic!("Your band is too small bro");
