@@ -1,5 +1,9 @@
+use chrono::{DateTime, Duration, TimeZone, Utc};
+use csv::Reader;
+use plotters::prelude::*;
 use rustatistics::mean_and_variance;
 use serde::{Deserialize, Serialize};
+use std::error::Error;
 
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
@@ -86,4 +90,56 @@ pub fn get_band_vec(tp_array: &[f32], time_array: &[u64]) -> Vec<BollingerBands>
         ));
     }
     bands_vec
+}
+
+pub fn candle_chart_simple(data_filepath: &str, out_filepath: &str) -> Result<(), Box<dyn Error>> {
+    let mut rdr =
+        Reader::from_path(data_filepath).expect("Could not load .csv file from data_filepath");
+    let mut time_vec: Vec<u64> = vec![];
+    let mut data_vec: Vec<Data> = vec![];
+    for row in rdr.deserialize().zip((0..100).into_iter()) {
+        let data: Data = row.0?;
+        time_vec.push(data.time);
+        data_vec.push(data);
+    }
+
+    let root = BitMapBackend::new(out_filepath, (1024, 768)).into_drawing_area();
+    root.fill(&WHITE)?;
+
+    let time_range: Vec<DateTime<Utc>> = time_vec
+        .iter()
+        .map(|t| Utc.timestamp((*t).try_into().unwrap(), 0))
+        .collect();
+    let (lower_time, upper_time) = (
+        time_range[0] - Duration::minutes(2),
+        *time_range.last().unwrap() + Duration::minutes(2),
+    );
+    let (upper_value, lower_value) = data_vec.iter().map(|data| (data.low, data.high)).fold(
+        (f32::MAX, f32::MIN),
+        |(old_low, old_high), (new_low, new_high)| (old_low.min(new_low), (old_high.max(new_high))),
+    );
+
+    let mut chart = ChartBuilder::on(&root)
+        .x_label_area_size(40)
+        .y_label_area_size(60)
+        .caption("BTC-USD Price", ("sans-serif", 50.0).into_font())
+        .build_cartesian_2d(lower_time..upper_time, lower_value..upper_value)?;
+
+    chart.configure_mesh().light_line_style(&WHITE).draw()?;
+
+    chart.draw_series(data_vec.iter().map(|x| {
+        CandleStick::new(
+            Utc.timestamp(x.time.try_into().unwrap(), 0),
+            x.open,
+            x.high,
+            x.low,
+            x.close,
+            GREEN.filled(),
+            RED,
+            15,
+        )
+    }))?;
+    root.present().expect("Unable to write result to file, please make sure 'plotters-doc-data' dir exists under current dir");
+    println!("Result has been saved to {}", out_filepath);
+    Ok(())
 }
