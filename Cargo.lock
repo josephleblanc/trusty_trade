@@ -607,7 +607,7 @@ checksum = "6c230d73fb8d8c1b9c0b3135c5142a8acee3a0558fb8db5cf1cb65f8d7862132"
 [[package]]
 name = "rustatistics"
 version = "0.1.0"
-source = "git+https://github.com/josephleblanc/rustatistics.git#da9403f03fbc71289a53dd7facb9b1f69d52d1df"
+source = "git+https://github.com/josephleblanc/rustatistics.git#b1b8ba8efde17b2301c45b80e74c841c502e1941"
 
 [[package]]
 name = "rustc_version"
