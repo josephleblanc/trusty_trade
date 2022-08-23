@@ -26,6 +26,13 @@ pub mod bollingerbands {
         [ma + diff, ma - diff]
     }
 
+    // Similar to simplest_bb, but also outputs mean
+    pub fn simplest_bb_with_mean(tp_window: &[f64]) -> [f64; 3] {
+        let (ma, _, sample_variation) = mean_and_variance(tp_window).unwrap();
+        let diff = sample_variation.sqrt() * 2.0;
+        [ma, ma + diff, ma - diff]
+    }
+
     // A very simple implementation of a rolling window bollinger bands
     // calculation. Takes typical price (tp) as input, and outputs a
     // Vector of [upper, lower] bollinger bands, using None for values
@@ -39,6 +46,19 @@ pub mod bollingerbands {
         let mut bands_vec = vec![None; 20];
         for i in n..tp_array.len() {
             bands_vec.push(Some(simplest_bb(&tp_array[(i - n)..=i])));
+        }
+        bands_vec
+    }
+
+    // Same as semi_rolling_bb, but also outputs calculated simple mean
+    pub fn semi_rolling_bb_with_mean(tp_array: &[f64]) -> Vec<Option<[f64; 3]>> {
+        let n = 20;
+        if tp_array.len() < n {
+            panic!("Your band is too small bro");
+        }
+        let mut bands_vec = vec![None; 20];
+        for i in n..tp_array.len() {
+            bands_vec.push(Some(simplest_bb_with_mean(&tp_array[(i - n)..=i])));
         }
         bands_vec
     }
