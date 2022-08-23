@@ -1,4 +1,4 @@
-mod bollingerbands {
+pub mod bollingerbands {
     use rustatistics::mean_and_variance;
     #[derive(Debug)]
     pub struct BollingerBands {
